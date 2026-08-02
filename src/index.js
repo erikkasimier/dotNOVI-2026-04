@@ -80,6 +80,7 @@ process.on('SIGTERM', () => {
   console.log('SIGTERM received, shutting down gracefully');
   server.close(() => {
     console.log('Server closed');
+    console.log('I got worms!!!');
     process.exit(0);
   });
 });
