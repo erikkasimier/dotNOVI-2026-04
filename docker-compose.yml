@@ -1,0 +1,36 @@
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile.multistage
+    container_name: app
+    ports:
+      - "3000:3000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: postgres://novi:novi@postgres:5432/novidb
+
+  postgres:
+    image: postgres:18-alpine
+    container_name: postgres
+    restart: always
+    environment:
+      POSTGRES_USER: novi
+      POSTGRES_PASSWORD: novi
+      POSTGRES_DB: novidb
+    ports:
+      - "5432:5432"
+    volumes:
+      - ./src/db/init.sql:/docker-entrypoint-initdb.d/init.sql
+      - pgdata:/var/lib/postgresql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U novi -d novidb"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 10s
+
+volumes:
+  pgdata:

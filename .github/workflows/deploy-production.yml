@@ -1,0 +1,74 @@
+name: Deploy to Production
+
+on:
+  repository_dispatch:
+    types: [deploy-production]
+  workflow_dispatch:
+    inputs:
+      image_tag:
+        description: 'Docker image tag to deploy'
+        required: true
+        type: string
+
+jobs:
+  deploy:
+    name: Deploy to Production
+    runs-on: ubuntu-latest
+    environment: production
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v6
+
+      - name: Verify image exists
+        run: |
+          docker pull ${{ github.event.client_payload.image_tag || inputs.image_tag }}
+      - name: Deploy to production
+        env:
+          IMAGE_TAG: ${{ github.event.client_payload.image_tag || inputs.image_tag }}
+          DEPLOYMENT_ENV: production
+        run: |
+          # This is a placeholder
+          # In real scenario, this would:
+          # - SSH to production server
+          # - Run docker pull and docker run
+          # - Update load balancer
+          # - Run health checks
+          # - Rollback on failure
+          echo "Deploying image: $IMAGE_TAG"
+          echo "Environment: $DEPLOYMENT_ENV"
+          # Example: Update Kubernetes
+          # kubectl set image deployment/dotnovi app=$IMAGE_TAG --record
+          # Example: Update Docker Swarm
+          # docker service update --image $IMAGE_TAG dotnovi-app
+      - name: Run smoke tests
+        run: |
+          # Wait for service to be ready
+          sleep 10
+          # Check health endpoint
+          curl -f http://localhost:3000/health || exit 1
+          # Check API endpoint
+          curl -f http://localhost:3000/api/notes || exit 1
+  rollback:
+    name: Rollback Deployment
+    runs-on: ubuntu-latest
+    needs: deploy
+    if: failure()
+    environment: production
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v6
+
+      - name: Get previous image tag
+        id: previous
+        run: |
+          # Get the previous deployment's image tag
+          # This would normally come from your deployment tracking system
+          echo "image_tag=dotnovi:previous" >> $GITHUB_OUTPUT
+      - name: Rollback to previous version
+        env:
+          PREVIOUS_IMAGE: ${{ steps.previous.outputs.image_tag }}
+        run: |
+          echo "Rolling back to: $PREVIOUS_IMAGE"
+          # kubectl rollout undo deployment/dotnovi

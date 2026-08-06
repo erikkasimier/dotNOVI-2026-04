@@ -6,7 +6,7 @@ import { query, healthCheck } from './db.js';
 import healthRoutes from './routes/health.js';
 import notesRoutes from './routes/notes.js';
 
-// Load environment variables
+// Load environment variables/Henkiepenkie
 dotenv.config();
 
 // Get __dirname equivalent in ESM

@@ -9,6 +9,7 @@ pnpm-debug.log*
 .env
 .env.local
 .env.*.local
+"DATABASE_PASSWORD=geheim123" > .env
 
 # IDE
 .vscode/
